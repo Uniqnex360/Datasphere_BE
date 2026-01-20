@@ -1,4 +1,4 @@
-from rest_framework.fields import Field
+from sqlmodel import Field
 from app.models.base import UUIDModel
 from sqlmodel import Field
 from typing import Optional
