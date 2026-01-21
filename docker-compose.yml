@@ -1,4 +1,15 @@
 services:
+  api:
+    build: .
+    container_name: datasphere_api
+    restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - db
+
   db:
     image: postgres:15
     container_name: datasphere_db
@@ -8,7 +19,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: datasphere
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
