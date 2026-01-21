@@ -25,7 +25,7 @@ class Category(UUIDModel,table=True):
     industry_name:Optional[str]=None
     category_1:str
     category_2:Optional[str]=None
-    breadcrum:Optional[str]=None
+    breadcrumb:Optional[str]=None
     
 class Industry(UUIDModel,table=True):
     __tablename__='industry_master'
