@@ -22,6 +22,11 @@ class ProductBase(BaseModel):
     category_1: Optional[str] = None
     category_2: Optional[str] = None
     category_3: Optional[str] = None
+    category_4: Optional[str] = None
+    category_5: Optional[str] = None
+    category_6: Optional[str] = None
+    category_7: Optional[str] = None
+    category_8: Optional[str] = None
     features_1: Optional[str] = None
     features_2: Optional[str] = None
     features_3: Optional[str] = None

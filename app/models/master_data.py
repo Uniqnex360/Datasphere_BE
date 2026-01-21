@@ -25,6 +25,12 @@ class Category(UUIDModel,table=True):
     industry_name:Optional[str]=None
     category_1:str
     category_2:Optional[str]=None
+    category_3:Optional[str]=None
+    category_4:Optional[str]=None
+    category_5:Optional[str]=None
+    category_6:Optional[str]=None
+    category_7:Optional[str]=None
+    category_8:Optional[str]=None
     breadcrumb:Optional[str]=None
     
 class Industry(UUIDModel,table=True):
