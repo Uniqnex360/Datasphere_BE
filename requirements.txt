@@ -32,3 +32,4 @@ pytesseract>=0.3.10
 opencv-python-headless>=4.9.0
 # --- Cloud Storage ---
 cloudinary>=1.36.0
+email-validator
