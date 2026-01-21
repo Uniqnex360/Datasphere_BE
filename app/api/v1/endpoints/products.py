@@ -12,7 +12,9 @@ async def read_products(db:AsyncSession=Depends(get_session),skip:int=0,limit:in
 @router.post('/',response_model=ProductResponse)
 async def create_product(*,db:AsyncSession=Depends(get_session),product_in:ProductCreate):
     return await product_service.create(db=db,obj_in=product_in)
-
+@router.post('/upsert',response_model=ProductResponse)
+async def upsert_product(product_in:ProductCreate,db:AsyncSession=Depends(get_session)):
+    return await product_service.upsert(db,product_in)
 @router.post('/{product_code}/enrich')
 async def trigger_enrichment(product_code:str,background_tasks:BackgroundTasks,db:AsyncSession=Depends(get_session)):
     product=await product_service.get_by_code(db,product_code)

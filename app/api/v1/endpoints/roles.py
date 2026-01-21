@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from app.core.database import get_session
 from app.models.roles import Role, Permission 
+from app.schemas.product import ProductCreate, ProductResponse
 
 router = APIRouter()
 @router.get("/", response_model=List[Role])
@@ -16,6 +17,7 @@ async def create_role(role: Role, db: AsyncSession = Depends(get_session)):
     await db.commit()
     await db.refresh(role)
     return role
+
 @router.put("/{role_id}", response_model=Role)
 async def update_role(role_id: str, role_in: Role, db: AsyncSession = Depends(get_session)):
     role = await db.get(Role, role_id)
