@@ -15,8 +15,18 @@ def create_access_token(subject:Union[str,any],expires_delta:timedelta=None)->st
     encoded_jwt=jwt.encode(to_encode,settings.SECRET_KEY,algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-def verify_password(plain_password:str,hashed_password:str)-> bool:
-    return pwd_context.verify(plain_password,hashed_password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    password_bytes = plain_password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+        plain_password = password_bytes.decode('utf-8', errors='ignore')
+        
+    return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(plain_password)->str:
-    return pwd_context.hash(plain_password)
+def get_password_hash(password: str) -> str:
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+        password = password_bytes.decode('utf-8', errors='ignore')
+        
+    return pwd_context.hash(password)
