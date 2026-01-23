@@ -4,42 +4,69 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_session
 from app.services.product_service import product_service
 from app.schemas.product import ProductCreate, ProductResponse
-router=APIRouter()
-@router.get('/',response_model=List[ProductResponse])
-async def read_products(db:AsyncSession=Depends(get_session),skip:int=0,limit:int=100):
-    return await product_service.get_multi(db,skip=skip,limit=limit)
+from app.workers.asset_worker import process_product_assets 
 
-@router.post('/',response_model=ProductResponse)
-async def create_product(*,db:AsyncSession=Depends(get_session),product_in:ProductCreate):
-    return await product_service.create(db=db,obj_in=product_in)
-@router.post('/upsert',response_model=ProductResponse)
-async def upsert_product(product_in:ProductCreate,db:AsyncSession=Depends(get_session)):
-    return await product_service.upsert(db,product_in)
+router = APIRouter()
+
+
+@router.get('/', response_model=List[ProductResponse])
+async def read_products(db: AsyncSession = Depends(get_session), skip: int = 0, limit: int = 100):
+    return await product_service.get_multi(db, skip=skip, limit=limit)
+
+
+@router.post('/', response_model=ProductResponse)
+async def create_product(*, db: AsyncSession = Depends(get_session), product_in: ProductCreate):
+    return await product_service.create(db=db, obj_in=product_in)
+
+
+@router.post('/upsert', response_model=ProductResponse)
+async def upsert_product(
+    product_in: ProductCreate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_session)
+):
+    try:
+        product = await product_service.upsert(db, product_in)
+        
+        if not product:
+            raise HTTPException(status_code=500, detail="Failed to upsert product")
+        
+        background_tasks.add_task(process_product_assets, product.product_code)
+        
+        return product
+    except Exception as e:
+        print(f" Error in upsert endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @router.put('/{product_code}', response_model=ProductResponse)
 async def update_product(product_code: str, product_data: dict, db: AsyncSession = Depends(get_session)):
     existing = await product_service.get_by_code(db, product_code)
     if not existing:
-        raise HTTPException(status_code=404, detail=f'Product with code {product_code} not found')
-    
+        raise HTTPException(
+            status_code=404, detail=f'Product with code {product_code} not found')
+
     return await product_service.update(db, db_obj=existing, obj_in=product_data)
+
 
 @router.delete('/{product_code}')
 async def delete_product(product_code: str, db: AsyncSession = Depends(get_session)):
     product = await product_service.get_by_code(db, product_code)
     if not product:
-        raise HTTPException(status_code=404, detail=f'Product with code {product_code} not found')
-    
+        raise HTTPException(
+            status_code=404, detail=f'Product with code {product_code} not found')
+
     await product_service.delete(db, product)
-    
+
     return {
         "message": f"Product '{product_code}' deleted successfully",
         "deleted_id": product_code
     }
+
+
 @router.post('/{product_code}/enrich')
-async def trigger_enrichment(product_code:str,background_tasks:BackgroundTasks,db:AsyncSession=Depends(get_session)):
-    product=await product_service.get_by_code(db,product_code)
+async def trigger_enrichment(product_code: str, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_session)):
+    product = await product_service.get_by_code(db, product_code)
     if not product:
-        raise HTTPException(status_code=404,detail='Product not found')
-    background_tasks.add_task(run_enrichment_task,product_code)
+        raise HTTPException(status_code=404, detail='Product not found')
+    background_tasks.add_task(run_enrichment_task, product_code)
     return {"status": "Enrichment started", "product": product.product_name}
-    

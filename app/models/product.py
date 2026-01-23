@@ -59,7 +59,6 @@ class Product(UUIDModel, table=True):
     features_9: Optional[str] = ""
     features_10: Optional[str] = ""
     
-    # Documents (1-5)
     document_1_name: Optional[str] = ""
     document_1_url: Optional[str] = ""
     document_2_name: Optional[str] = ""
@@ -71,7 +70,6 @@ class Product(UUIDModel, table=True):
     document_5_name: Optional[str] = ""
     document_5_url: Optional[str] = ""
     
-    # Images (1-5)
     image_name_1: Optional[str] = ""
     image_url_1: Optional[str] = ""
     image_name_2: Optional[str] = ""
@@ -83,7 +81,6 @@ class Product(UUIDModel, table=True):
     image_name_5: Optional[str] = ""
     image_url_5: Optional[str] = ""
     
-    # Videos (1-3)
     video_name_1: Optional[str] = ""
     video_url_1: Optional[str] = ""
     video_name_2: Optional[str] = ""
@@ -91,7 +88,6 @@ class Product(UUIDModel, table=True):
     video_name_3: Optional[str] = ""
     video_url_3: Optional[str] = ""
     
-    # Status & Scores
     enrichment_status: str = Field(default="pending")
     completeness_score: int = Field(default=0)
     completeness_details: dict = Field(default={}, sa_column=Column(JSON))

@@ -10,8 +10,11 @@ class CRUDProduct(CRUDBase[Product,ProductCreate,ProductUpdate]):
         result = await db.execute(query)
         return result.scalars().one_or_none()
     async def upsert(self,db:AsyncSession,product_in:ProductCreate)->Product:
+        if product_in.product_code:
+            product_in.product_code=product_in.product_code.strip()
         existing=await self.get_by_code(db,product_in.product_code)
         if existing:
+            print(f"🔄 Upsert: Updating existing product {product_in.product_code}")
             update_data=product_in.model_dump(exclude_unset=True)
             for key,value in update_data.items():
                 setattr(existing,key,value)
@@ -20,6 +23,18 @@ class CRUDProduct(CRUDBase[Product,ProductCreate,ProductUpdate]):
             await db.refresh(existing)
             return existing
         else:
-            return await self.create(db, obj_in=product_in)
+            print(f"🆕 Upsert: Creating new product {product_in.product_code}")
+            db_obj = Product.model_validate(product_in)
+            if not getattr(db_obj, "enrichment_status", None):
+                db_obj.enrichment_status = "pending"
+            if getattr(db_obj, "completeness_score", None) is None:
+                db_obj.completeness_score = 0
+            
+            db.add(db_obj)
+            await db.commit() 
+            await db.refresh(db_obj)
+            if not db_obj:
+                raise ValueError("Database failed to return created object")
+            return db_obj
                 
 product_service=CRUDProduct(Product)

@@ -1,13 +1,16 @@
-from sqlmodel import Field
-from app.models.base import UUIDModel
-from sqlmodel import Field
+from sqlmodel import SQLModel, Field
 from typing import Optional
+from datetime import datetime
+import uuid
 
-class DigitalAsset(UUIDModel,table=True):
-    __tablename__='digital_assets'
-    file_name:str
-    file_url:str
-    file_type:str
-    file_size:str
-    public_id:str 
-    user_id:Optional[str]=None
+class DigitalAsset(SQLModel, table=True):
+    __tablename__ = "digital_assets"
+    
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    file_name: str
+    file_url: str
+    file_type: str  
+    file_size: int
+    public_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow) 

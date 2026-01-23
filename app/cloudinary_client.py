@@ -3,7 +3,7 @@ import logging
 from typing import Optional, Dict
 import cloudinary
 import cloudinary.uploader
-from .config import settings
+from app.core.config import settings
 logger = logging.getLogger(__name__)
 cloudinary.config(
     cloud_name=settings.cloudinary_cloud_name,
@@ -12,6 +12,15 @@ cloudinary.config(
     secure=True
 )
 
+def ingest_image_from_url(external_url:str,public_id:str)->Optional[Dict]:
+    try:
+        if 'cloudinary.com' in external_url:
+            return external_url
+        response=cloudinary.uploader.upload(external_url,public_id=public_id,overwrite=True,resource_type='image')
+        return {'secure_url':response.get('secure_url'),'public_id':response.get('public_id'),'bytes':response.get('bytes',0),'format':response.get('format','jpg')}
+    except Exception as e:
+        logger.error(f"Cloudinary URL ingenstion  failed:{e}")
+        return None
 
 # def upload_source(file_content: bytes, public_id: str) -> Optional[Dict]:
 #     if not file_content:
