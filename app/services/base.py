@@ -2,6 +2,8 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlmodel import SQLModel, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.encoders import jsonable_encoder
+from datetime import datetime
+
 ModelType=TypeVar("ModelType",bound=SQLModel)
 CreateSchemaType=TypeVar("CreateSchemaType",bound=SQLModel)
 UpdateSchemaType=TypeVar('UpdateSchemaType',bound=SQLModel)
@@ -22,15 +24,21 @@ class CRUDBase(Generic[ModelType,CreateSchemaType,UpdateSchemaType]):
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    async def update(self,db:AsyncSession,*,db_obj:ModelType,obj_in:Union[UpdateSchemaType,Dict[str,Any]])->ModelType:
-        obj_data=jsonable_encoder(db_obj)
-        if isinstance(obj_data,dict):
-            update_data=obj_in
+    async def update(self, db: AsyncSession, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
         else:
-            update_data=obj_in.dict(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj,field,update_data[field])
+            update_data = obj_in.dict(exclude_unset=True)
+        
+        readonly_fields = {'id', 'created_at', 'updated_at'}
+        
+        for field, value in update_data.items():
+            if field not in readonly_fields and hasattr(db_obj, field) and value is not None:
+                setattr(db_obj, field, value)
+        
+        if hasattr(db_obj, 'updated_at'):
+            db_obj.updated_at = datetime.utcnow()
+        
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
@@ -40,5 +48,8 @@ class CRUDBase(Generic[ModelType,CreateSchemaType,UpdateSchemaType]):
         await db.delete()
         await db.commit()
         return obj
+    async def delete(self, db: AsyncSession, db_obj: ModelType) -> None:
+        await db.delete(db_obj)
+        await db.commit()
         
         

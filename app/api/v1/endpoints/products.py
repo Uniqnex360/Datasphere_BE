@@ -15,6 +15,26 @@ async def create_product(*,db:AsyncSession=Depends(get_session),product_in:Produ
 @router.post('/upsert',response_model=ProductResponse)
 async def upsert_product(product_in:ProductCreate,db:AsyncSession=Depends(get_session)):
     return await product_service.upsert(db,product_in)
+@router.put('/{product_code}', response_model=ProductResponse)
+async def update_product(product_code: str, product_data: dict, db: AsyncSession = Depends(get_session)):
+    existing = await product_service.get_by_code(db, product_code)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f'Product with code {product_code} not found')
+    
+    return await product_service.update(db, db_obj=existing, obj_in=product_data)
+
+@router.delete('/{product_code}')
+async def delete_product(product_code: str, db: AsyncSession = Depends(get_session)):
+    product = await product_service.get_by_code(db, product_code)
+    if not product:
+        raise HTTPException(status_code=404, detail=f'Product with code {product_code} not found')
+    
+    await product_service.delete(db, product)
+    
+    return {
+        "message": f"Product '{product_code}' deleted successfully",
+        "deleted_id": product_code
+    }
 @router.post('/{product_code}/enrich')
 async def trigger_enrichment(product_code:str,background_tasks:BackgroundTasks,db:AsyncSession=Depends(get_session)):
     product=await product_service.get_by_code(db,product_code)
